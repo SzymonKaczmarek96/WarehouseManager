@@ -4,7 +4,7 @@ CREATE TABLE if NOT EXISTS employee (
     password VARCHAR(512) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     is_active BOOLEAN NOT NULL,
-    role JSONB,
+    role VARCHAR(50) NOT NULL,
     access_token VARCHAR(512),
     refresh_token VARCHAR(512),
     access_token_expiration_date TIMESTAMP,
