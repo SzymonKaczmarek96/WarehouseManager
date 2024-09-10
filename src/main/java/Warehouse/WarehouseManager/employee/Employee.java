@@ -4,6 +4,7 @@ import Warehouse.WarehouseManager.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -32,10 +33,8 @@ public class Employee {
     private boolean isActive;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = Role.class)
-//    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role")
-    private Set<Role> roles = Collections.emptySet();
+    @Column(name = "role",nullable = false)
+    private Role role;
 
     private String accessToken;
 
@@ -46,4 +45,11 @@ public class Employee {
 
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime refreshTokenExpirationDate;
+
+
+    public EmployeeDto toEmployeeDto(){
+        return new EmployeeDto(id,username,email,password,isActive,role
+                ,accessToken,refreshToken,accessTokenExpirationDate,accessTokenExpirationDate);
+    }
+
 }
