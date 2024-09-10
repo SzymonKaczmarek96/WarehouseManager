@@ -38,7 +38,6 @@ public class EmployeeService {
             throw new UsernameAlreadyExistsException();
         }
         Employee employee = new Employee();
-        employee.setId(employeeDto.id());
         employee.setUsername(employeeDto.username());
         employee.setPassword(bCryptPasswordEncoder.encode(employeeDto.password()));
         employee.setEmail(employeeDto.email());
