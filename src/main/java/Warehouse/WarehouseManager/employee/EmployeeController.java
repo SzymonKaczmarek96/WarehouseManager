@@ -1,6 +1,8 @@
 package Warehouse.WarehouseManager.employee;
 
+import Warehouse.WarehouseManager.security.LoginResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +18,7 @@ public class EmployeeController {
 
     @GetMapping("/{username}")
     public ResponseEntity<EmployeeDto> getEmployeeByUsername(@PathVariable String username){
-        EmployeeDto employeeDto = employeeService.getEmployeeByUsername(username);
+        EmployeeDto employeeDto = employeeService.getEmployeeDtoByUsername(username);
         return ResponseEntity.ok(employeeDto);
     }
 
@@ -25,4 +27,11 @@ public class EmployeeController {
         EmployeeDto employee = employeeService.employeeRegistration(employeeDto);
         return ResponseEntity.ok().body(employee);
     }
+
+    @PatchMapping("/login")
+    public ResponseEntity<LoginResponseDto> loginEmployee(@RequestBody EmployeeDto employeeDto) {
+        return ResponseEntity.ok(employeeService.employeeLogin(employeeDto));
+    }
+
+
 }
