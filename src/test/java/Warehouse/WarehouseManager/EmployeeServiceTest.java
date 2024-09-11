@@ -41,7 +41,7 @@ public class EmployeeServiceTest {
         //given
         when(employeeRepository.findEmployeeByUsername("szymon")).thenReturn(Optional.of(createEmployeeTwo()));
         //when
-        EmployeeDto employeeDto = employeeService.getEmployeeByUsername("szymon");
+        EmployeeDto employeeDto = employeeService.getEmployeeDtoByUsername("szymon");
         //then
         assertNotNull(employeeDto);
         assertEquals("szymon@o2.pl",employeeDto.email());
@@ -50,7 +50,7 @@ public class EmployeeServiceTest {
 
     @Test
     public void shouldThrowEmployeeNotExistsExceptionWhenEmployeeNotExists(){
-        assertThrows(EmployeeNotExistsException.class,() -> employeeService.getEmployeeByUsername("szymon"));
+        assertThrows(EmployeeNotExistsException.class,() -> employeeService.getEmployeeDtoByUsername("szymon"));
     }
 
 

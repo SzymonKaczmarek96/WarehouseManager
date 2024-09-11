@@ -4,12 +4,9 @@ import Warehouse.WarehouseManager.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,17 +20,17 @@ public class Employee {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(unique = true, nullable = false)
-    private String email;
-
     @Column(nullable = false)
     private String password;
+
+    @Column(unique = true, nullable = false)
+    private String email;
 
     @Column(nullable = false)
     private boolean isActive;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role",nullable = false)
+    @Column(name = "role", nullable = false)
     private Role role;
 
     private String accessToken;
@@ -47,9 +44,9 @@ public class Employee {
     private LocalDateTime refreshTokenExpirationDate;
 
 
-    public EmployeeDto toEmployeeDto(){
-        return new EmployeeDto(id,username,email,password,isActive,role
-                ,accessToken,refreshToken,accessTokenExpirationDate,accessTokenExpirationDate);
+    public EmployeeDto toEmployeeDto() {
+        return new EmployeeDto(id, username, email, password, isActive, role
+                , accessToken, refreshToken, accessTokenExpirationDate, refreshTokenExpirationDate);
     }
 
 }
