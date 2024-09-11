@@ -45,7 +45,7 @@ public class Employee {
 
 
     public EmployeeDto toEmployeeDto() {
-        return new EmployeeDto(id, username, email, password, isActive, role
+        return new EmployeeDto(id, username,password, email, isActive, role
                 , accessToken, refreshToken, accessTokenExpirationDate, refreshTokenExpirationDate);
     }
 

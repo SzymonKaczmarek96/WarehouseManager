@@ -38,6 +38,7 @@ public class EmployeeService {
         if (employeeRepository.existsEmployeeByUsername(employeeDto.username())) {
             throw new UsernameAlreadyExistsException();
         }
+
         Employee employee = new Employee();
         employee.setUsername(employeeDto.username());
         employee.setPassword(securityService.encodePassword(employeeDto.password()));

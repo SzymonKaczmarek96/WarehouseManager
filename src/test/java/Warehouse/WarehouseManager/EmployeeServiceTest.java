@@ -10,6 +10,7 @@ import Warehouse.WarehouseManager.exception.EmailAlreadyExistsException;
 import Warehouse.WarehouseManager.exception.EmployeeNotExistsException;
 import Warehouse.WarehouseManager.exception.EmptyDataException;
 import Warehouse.WarehouseManager.exception.UsernameAlreadyExistsException;
+import Warehouse.WarehouseManager.security.SecurityService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +32,7 @@ public class EmployeeServiceTest {
     private EmployeeRepository employeeRepository;
 
     @Mock
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private SecurityService securityService;
 
     @InjectMocks
     private EmployeeService employeeService;
@@ -44,8 +45,9 @@ public class EmployeeServiceTest {
         EmployeeDto employeeDto = employeeService.getEmployeeDtoByUsername("szymon");
         //then
         assertNotNull(employeeDto);
-        assertEquals("szymon@o2.pl",employeeDto.email());
+        assertEquals("hashed_password",employeeDto.password());
         assertEquals("szymon",employeeDto.username());
+        assertEquals("szymon@o2.pl",employeeDto.email());
     }
 
     @Test
@@ -57,7 +59,14 @@ public class EmployeeServiceTest {
     @Test
     public void shouldSaveEmployeeToDB(){
         //given
-        when(bCryptPasswordEncoder.encode(createEmployeeOne().getPassword())).thenReturn("encodedPassword");
+//        when(bCryptPasswordEncoder.encode(createEmployeeOne().getPassword())).thenReturn("encodedPassword");
+        when(securityService.encodePassword(any(String.class))).thenReturn("hashed_password");
+        when(employeeRepository.save(any(Employee.class))).thenAnswer(
+                invocationOnMock -> {
+                    Employee saveEmployee = invocationOnMock.getArgument(0);
+                    saveEmployee.setId(1L);
+                    return saveEmployee;
+                });
         //when
         EmployeeDto employeeDto = employeeService.employeeRegistration(createEmployeeOne().toEmployeeDto());
         //then
@@ -149,8 +158,8 @@ public class EmployeeServiceTest {
         Employee employee1 = new Employee(
                 1L, // id
                 "john", // username
-                "johndoe@example.com", // email
                 "hashed_password", // password
+                "johndoe@example.com", // email
                 true, // isActive
                 Role.ADMIN, // roles
                 "access_token_value", // accessToken
@@ -166,8 +175,8 @@ public class EmployeeServiceTest {
         Employee employee2 = new Employee(
                 2L, // id
                 "szymon", // username
-                "szymon@o2.pl", // email
                 "hashed_password", // password
+                "szymon@o2.pl", // email
                 true, // isActive
                 Role.ADMIN, // roles
                 "access_token_value", // accessToken
@@ -183,8 +192,8 @@ public class EmployeeServiceTest {
         Employee employee3 = new Employee(
                 2L, // id
                 "szymon", // username
-                "szymon@interia.pl", // email
                 "hashed_password", // password
+                "szymon@interia.pl", // email
                 true, // isActive
                 Role.ADMIN, // roles
                 "access_token_value", // accessToken
