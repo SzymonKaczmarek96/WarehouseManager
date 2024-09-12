@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.FORBIDDEN)
-public class InactiveEmployeeException extends RuntimeException {
-    public InactiveEmployeeException(String message) {
+public class EmployeeActivationException extends RuntimeException {
+    public EmployeeActivationException(String message) {
         super(message);
     }
 }

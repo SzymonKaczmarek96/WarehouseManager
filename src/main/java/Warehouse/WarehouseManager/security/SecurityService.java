@@ -30,6 +30,10 @@ public class SecurityService {
         return bCryptPasswordEncoder.matches(employeeDto.password(), encodedEmployeeDto.password());
     }
 
+    public String generateActivationToken(EmployeeDto employeeDto) {
+        return jwtUtil.createActivationToken(employeeDto);
+    }
+
     public String generateAccessToken(EmployeeDto employeeDto) {
         return jwtUtil.createAccessToken(employeeDto);
     }
