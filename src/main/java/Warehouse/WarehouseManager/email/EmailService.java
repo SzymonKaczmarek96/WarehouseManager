@@ -20,7 +20,7 @@ public class EmailService {
         this.serverURL = serverURL;
     }
 
-    public void sendActivationMail(EmployeeDto employeeDto) {
+    public void sendActivationEmail(EmployeeDto employeeDto) {
         String activationToken = securityService.generateActivationToken(employeeDto);
         String URL = serverURL + "/api/employee/activate/" + activationToken;
         SimpleMailMessage message = new SimpleMailMessage();

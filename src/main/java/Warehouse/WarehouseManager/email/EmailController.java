@@ -21,8 +21,8 @@ public class EmailController {
     }
 
     @PostMapping("/activate")
-    public ResponseEntity sendActivationMail(@RequestBody EmployeeDto employeeDto) {
-        emailService.sendActivationMail(employeeDto);
+    public ResponseEntity sendActivationEmail(@RequestBody EmployeeDto employeeDto) {
+        emailService.sendActivationEmail(employeeDto);
         return new ResponseEntity(HttpStatus.OK);
     }
 }
