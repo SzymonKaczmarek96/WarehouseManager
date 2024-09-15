@@ -1,22 +1,30 @@
 package Warehouse.WarehouseManager.employee;
 
+import Warehouse.WarehouseManager.email.EmailService;
 import Warehouse.WarehouseManager.exception.*;
 import Warehouse.WarehouseManager.security.LoginResponseDto;
 import Warehouse.WarehouseManager.security.SecurityService;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+
 @Service
 public class EmployeeService {
 
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
     private final SecurityService securityService;
+    private final EmailService emailService;
 
     @Autowired
-    public EmployeeService(EmployeeRepository employeeRepository, final SecurityService securityService) {
+    public EmployeeService(EmployeeRepository employeeRepository, final SecurityService securityService, final EmailService emailService) {
         this.employeeRepository = employeeRepository;
         this.securityService = securityService;
+        this.emailService = emailService;
     }
 
     public Employee getEmployeeByUsername(String username) {
@@ -46,6 +54,9 @@ public class EmployeeService {
         employee.setActive(false);
         employee.setRole(employeeDto.role());
         employeeRepository.save(employee);
+
+        emailService.sendActivationEmail(employeeDto);
+
         return employee.toEmployeeDto();
     }
 
@@ -55,9 +66,7 @@ public class EmployeeService {
             throw new EmptyDataException();
         }
         EmployeeDto encodedEmployeeDto = getEmployeeDtoByUsername(employeeDto.username());
-        if (!encodedEmployeeDto.isActive()) {
-            throw new InactiveEmployeeException("Account inactive");
-        }
+        checkActivate(encodedEmployeeDto.isActive(), true);
 
         if (securityService.checkPassword(employeeDto, encodedEmployeeDto)) {
             Employee employee = getEmployeeByUsername(employeeDto.username());
@@ -71,6 +80,28 @@ public class EmployeeService {
             return new LoginResponseDto(accessToken, refreshToken);
         } else {
             throw new WrongCredentialsException();
+        }
+    }
+
+    @Transactional
+    public void activateAccount(String activationToken) {
+        DecodedJWT decodedToken = securityService.verifyToken(activationToken);
+        if (decodedToken.getExpiresAt().before(Date.from(Instant.now()))) {
+            throw new TokenExpiredException("Activation token expired");
+        }
+        Employee employee = getEmployeeByUsername(decodedToken.getSubject());
+        checkActivate(employee.isActive(), false);
+
+        employee.setActive(true);
+        employeeRepository.save(employee);
+        checkActivate(getEmployeeDtoByUsername(decodedToken.getSubject()).isActive(), true);
+    }
+
+    private void checkActivate(boolean isActive, boolean shouldBeActive) {
+        if (isActive && !shouldBeActive) {
+            throw new EmployeeActivationException("Account has already been activated");
+        } else if (!isActive && shouldBeActive) {
+            throw new EmployeeActivationException("Account inactive");
         }
     }
 }

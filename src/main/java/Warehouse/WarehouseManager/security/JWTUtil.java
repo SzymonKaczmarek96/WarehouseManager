@@ -55,4 +55,11 @@ public class JWTUtil {
         return LocalDateTime.ofInstant(decodedJWT.getExpiresAt().toInstant(), ZoneId.systemDefault());
     }
 
+    public String createActivationToken(EmployeeDto employeeDto) {
+        return JWT.create()
+                .withSubject(employeeDto.username())
+                .withIssuedAt(Date.from(Instant.now()))
+                .withExpiresAt(Date.from(Instant.now().plusSeconds(86400)))
+                .sign(algorithm);
+    }
 }

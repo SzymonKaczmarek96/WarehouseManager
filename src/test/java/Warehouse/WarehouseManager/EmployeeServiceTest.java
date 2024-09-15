@@ -1,6 +1,7 @@
 package Warehouse.WarehouseManager;
 
 
+import Warehouse.WarehouseManager.email.EmailService;
 import Warehouse.WarehouseManager.employee.Employee;
 import Warehouse.WarehouseManager.employee.EmployeeDto;
 import Warehouse.WarehouseManager.employee.EmployeeRepository;
@@ -34,8 +35,12 @@ public class EmployeeServiceTest {
     @Mock
     private SecurityService securityService;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private EmployeeService employeeService;
+
 
     @Test
     public void shouldFindEmployeeByUsername(){
@@ -77,7 +82,7 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void shouldThrowEmptyDataExceptionWhenUsernameIsEmpty(){
+    public void shouldThrowEmptyDataExceptionWhenUsernameIsEmpty() {
         //given
         Set<Role> roles = new HashSet<>();
         Employee employee3 = new Employee(
