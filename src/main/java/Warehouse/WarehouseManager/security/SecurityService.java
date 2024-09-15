@@ -23,11 +23,11 @@ public class SecurityService {
         return bCryptPasswordEncoder.encode(password);
     }
 
-    public boolean checkPassword(EmployeeDto employeeDto, EmployeeDto encodedEmployeeDto) {
-        if (employeeDto.username().isBlank() || employeeDto.password().isBlank()) {
+    public boolean checkPassword(String password, String  encodedPassword) {
+        if (password.isBlank() || encodedPassword.isBlank()) {
             throw new EmptyDataException();
         }
-        return bCryptPasswordEncoder.matches(employeeDto.password(), encodedEmployeeDto.password());
+        return bCryptPasswordEncoder.matches(password, encodedPassword);
     }
 
     public String generateActivationToken(EmployeeDto employeeDto) {
