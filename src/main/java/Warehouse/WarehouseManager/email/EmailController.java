@@ -22,10 +22,7 @@ public class EmailController {
 
     @PostMapping("/activate")
     public ResponseEntity sendActivationMail(@RequestBody EmployeeDto employeeDto) {
-        emailService.sendActivationEmail(employeeDto);
-
-        if (employeeService.getEmployeeDtoByUsername(employeeDto.username()).isActive()) {
-            return new ResponseEntity(HttpStatus.OK);
-        } else return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        emailService.sendActivationMail(employeeDto);
+        return new ResponseEntity(HttpStatus.OK);
     }
 }
