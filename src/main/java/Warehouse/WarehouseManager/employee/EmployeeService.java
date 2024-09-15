@@ -2,6 +2,7 @@ package Warehouse.WarehouseManager.employee;
 
 import Warehouse.WarehouseManager.email.EmailService;
 import Warehouse.WarehouseManager.exception.*;
+import Warehouse.WarehouseManager.security.ChangePasswordDto;
 import Warehouse.WarehouseManager.security.LoginResponseDto;
 import Warehouse.WarehouseManager.security.SecurityService;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -33,6 +35,16 @@ public class EmployeeService {
 
     public EmployeeDto getEmployeeDtoByUsername(String username) {
         return getEmployeeByUsername(username).toEmployeeDto();
+    }
+
+    private List<Employee> getEmployees() {
+        return employeeRepository.findAll();
+    }
+
+    public List<EmployeeDto> getEmployeeDtoList() {
+        List<EmployeeDto> employeeDtoList = new ArrayList<>();
+        getEmployees().forEach(employee -> employeeDtoList.add(employee.toEmployeeDto()));
+        return employeeDtoList;
     }
 
     @Transactional
@@ -68,7 +80,7 @@ public class EmployeeService {
         EmployeeDto encodedEmployeeDto = getEmployeeDtoByUsername(employeeDto.username());
         checkActivate(encodedEmployeeDto.isActive(), true);
 
-        if (securityService.checkPassword(employeeDto, encodedEmployeeDto)) {
+        if (securityService.checkPassword(employeeDto.password(), encodedEmployeeDto.password())) {
             Employee employee = getEmployeeByUsername(employeeDto.username());
             String accessToken = securityService.generateAccessToken(encodedEmployeeDto);
             String refreshToken = securityService.generateRefreshToken(encodedEmployeeDto);
@@ -103,5 +115,17 @@ public class EmployeeService {
         } else if (!isActive && shouldBeActive) {
             throw new EmployeeActivationException("Account inactive");
         }
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordDto changePasswordDto) {
+        if (changePasswordDto.username().isBlank() || changePasswordDto.newPassword().isBlank() || changePasswordDto.oldPassword().isBlank()) {
+            throw new EmptyDataException();
+        }
+        Employee encodedEmployee = getEmployeeByUsername(changePasswordDto.username());
+        if (securityService.checkPassword(changePasswordDto.oldPassword(), encodedEmployee.getPassword())) {
+            encodedEmployee.setPassword(securityService.encodePassword(changePasswordDto.newPassword()));
+            employeeRepository.save(encodedEmployee);
+        } else throw new WrongCredentialsException();
     }
 }
