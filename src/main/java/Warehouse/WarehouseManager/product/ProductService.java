@@ -26,17 +26,17 @@ public class ProductService {
         this.stockRepository = stockRepository;
     }
 
-    public List<ProductDto> getProductList(){
+    public List<ProductDto> getDtoProductList(){
         return productRepository.findAll().stream().map(Product::toProductDto).toList();
     }
 
-    public ProductDto getProductByProductName(String name){
+    public ProductDto getProductDtoByProductName(String name){
         Product product = productRepository.findByName(name)
                 .orElseThrow(() -> new ProductNotExistsException(name));
         return product.toProductDto();
     }
 
-    public List<ProductDto> getProductListBySize(ProductSize size){
+    public List<ProductDto> getProductDtoListBySize(ProductSize size){
         List<Product> productList = productRepository.findBySize(size);
        return productList.stream().map(product -> product.toProductDto()).toList();
     }

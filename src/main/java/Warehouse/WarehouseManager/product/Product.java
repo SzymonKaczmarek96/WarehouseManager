@@ -31,8 +31,7 @@ public class Product {
         return new ProductDto(id,name,size);
     }
     public void setSize(ProductSize size) {
-        EnumSet<ProductSize> productSizeList =
-                EnumSet.of(ProductSize.SMALL,ProductSize.MEDIUM,ProductSize.BIG,ProductSize.PALETTE);
+        EnumSet<ProductSize> productSizeList = EnumSet.allOf(ProductSize.class);
         if(!productSizeList.contains(size)){
             throw new IllegalArgumentException("Size of the product is incorrect");
         }

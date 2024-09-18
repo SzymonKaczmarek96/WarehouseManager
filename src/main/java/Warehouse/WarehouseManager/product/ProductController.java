@@ -21,17 +21,17 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductDto>> getProductList(){
-        return ResponseEntity.ok(productService.getProductList());
+        return ResponseEntity.ok(productService.getDtoProductList());
     }
 
     @GetMapping("/{name}")
     public ResponseEntity<ProductDto> getProductByProductName(@PathVariable String name){
-        return ResponseEntity.ok(productService.getProductByProductName(name));
+        return ResponseEntity.ok(productService.getProductDtoByProductName(name));
     }
 
     @GetMapping("/size")
     public ResponseEntity<List<ProductDto>> getProductListByProductSize(@RequestBody ProductSize size){
-        return ResponseEntity.ok().body(productService.getProductListBySize(size));
+        return ResponseEntity.ok().body(productService.getProductDtoListBySize(size));
     }
 
     @PostMapping("/add")

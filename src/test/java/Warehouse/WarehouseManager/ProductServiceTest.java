@@ -12,15 +12,12 @@ import Warehouse.WarehouseManager.product.ProductRepository;
 import Warehouse.WarehouseManager.product.ProductService;
 import Warehouse.WarehouseManager.stock.Stock;
 import Warehouse.WarehouseManager.stock.StockRepository;
-import Warehouse.WarehouseManager.warehouse.Warehouse;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +42,7 @@ public class ProductServiceTest {
         //given
         when(productRepository.findAll()).thenReturn(createProductsForTest());
         //when
-        List<ProductDto> productDtoList = productService.getProductList();
+        List<ProductDto> productDtoList = productService.getDtoProductList();
         //then
         assertEquals(6,productDtoList.size());
     }
@@ -57,7 +54,7 @@ public class ProductServiceTest {
         String name = "Product1";
         when(productRepository.findByName(name)).thenReturn(Optional.of(product));
         //when
-        ProductDto productDto = productService.getProductByProductName(name);
+        ProductDto productDto = productService.getProductDtoByProductName(name);
         //then
         assertNotNull(productDto);
         assertEquals(1L,productDto.id());
@@ -67,7 +64,7 @@ public class ProductServiceTest {
 
     @Test
     public void shouldThrowProductNotExistsExceptionWhenProductNotExists(){
-        assertThrows(ProductNotExistsException.class,() -> productService.getProductByProductName("Product1"));
+        assertThrows(ProductNotExistsException.class,() -> productService.getProductDtoByProductName("Product1"));
     }
 
     @Test
@@ -77,7 +74,7 @@ public class ProductServiceTest {
                 .filter(product -> product.getSize().equals(ProductSize.MEDIUM)).toList();
         when(productRepository.findBySize(ProductSize.MEDIUM)).thenReturn(mediumSize);
         //when
-        List<ProductDto> productDtoList = productService.getProductListBySize(ProductSize.MEDIUM);
+        List<ProductDto> productDtoList = productService.getProductDtoListBySize(ProductSize.MEDIUM);
         //then
         assertEquals(4,productDtoList.size());
         assertEquals(ProductSize.MEDIUM,productDtoList.get(0).size());
