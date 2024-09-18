@@ -5,5 +5,6 @@ public enum WarehouseSystemOperation {
     RECEIVE,
     STORE,
     MODIFY,
-    REMOVAL;
+    REMOVAL,
+    ADD;
 }

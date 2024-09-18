@@ -1,18 +1,18 @@
 package Warehouse.WarehouseManager.enums;
 
 public enum ProductSize {
-    SMALL(1),
-    MEDIUM(10),
-    BIG(100),
-    PALETTE(10000);
+    SMALL(1L),
+    MEDIUM(10L),
+    BIG(100L),
+    PALLET(10000L);
 
-    private final int value;
+    private final Long value;
 
-    ProductSize(final int value) {
+    ProductSize(final Long value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public Long getValue() {
         return value;
     }
 }

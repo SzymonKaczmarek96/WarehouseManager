@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +36,10 @@ public class EmployeeService {
 
     public EmployeeDto getEmployeeDtoByUsername(String username) {
         return getEmployeeByUsername(username).toEmployeeDto();
+    }
+
+    public EmployeeDto getEmployeeDtoById(Long id) {
+        return employeeRepository.findById(id).orElseThrow(() -> new EmployeeNotExistsException("id="+id)).toEmployeeDto();
     }
 
     private List<Employee> getEmployees() {
@@ -91,7 +96,25 @@ public class EmployeeService {
             employeeRepository.save(employee);
             return new LoginResponseDto(accessToken, refreshToken);
         } else {
-            throw new WrongCredentialsException();
+            throw new WrongCredentialsException("Wrong username or password");
+        }
+    }
+
+    @Transactional
+    public LoginResponseDto refreshAccessToken(String bearerRefreshToken) {
+        String refreshToken = securityService.getAccessTokenFromBearer(bearerRefreshToken);
+        Employee employee = getEmployeeByUsername(securityService.verifyToken(refreshToken).getClaim("username").asString());
+
+        if (!employee.getRefreshToken().equals(refreshToken)) {
+            throw new WrongCredentialsException("Authorization token not provided");
+        } else if (employee.getRefreshTokenExpirationDate().isBefore(LocalDateTime.now())) {
+            throw new TokenExpiredException("Refresh token expired. Please log in again");
+        } else {
+            String newAccessToken = securityService.generateAccessToken(employee.toEmployeeDto());
+            employee.setAccessToken(newAccessToken);
+            employee.setAccessTokenExpirationDate(securityService.getTokenExpirationDate(newAccessToken));
+            employeeRepository.save(employee);
+            return new LoginResponseDto(newAccessToken, securityService.getAccessTokenFromBearer(bearerRefreshToken));
         }
     }
 
@@ -126,6 +149,6 @@ public class EmployeeService {
         if (securityService.checkPassword(changePasswordDto.oldPassword(), encodedEmployee.getPassword())) {
             encodedEmployee.setPassword(securityService.encodePassword(changePasswordDto.newPassword()));
             employeeRepository.save(encodedEmployee);
-        } else throw new WrongCredentialsException();
+        } else throw new WrongCredentialsException("Incorrect password");
     }
 }

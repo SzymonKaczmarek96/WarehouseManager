@@ -1,7 +1,10 @@
 package Warehouse.WarehouseManager.security;
 
 import Warehouse.WarehouseManager.employee.EmployeeDto;
+import Warehouse.WarehouseManager.employee.EmployeeRepository;
+import Warehouse.WarehouseManager.exception.EmployeeNotExistsException;
 import Warehouse.WarehouseManager.exception.EmptyDataException;
+import Warehouse.WarehouseManager.exception.IncorrectTokenDataException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,10 +16,13 @@ public class SecurityService {
 
     private final JWTUtil jwtUtil;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final EmployeeRepository employeeRepository;
 
-    public SecurityService(final JWTUtil jwtUtil, final BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public SecurityService(final JWTUtil jwtUtil, final BCryptPasswordEncoder bCryptPasswordEncoder,
+                           final EmployeeRepository employeeRepository) {
         this.jwtUtil = jwtUtil;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.employeeRepository = employeeRepository;
     }
 
     public String encodePassword(String password) {
@@ -48,5 +54,18 @@ public class SecurityService {
 
     public DecodedJWT verifyToken(String token) {
         return jwtUtil.verifyToken(token);
+    }
+
+    public String getAccessTokenFromBearer(String bearerToken) {
+        if (bearerToken.toLowerCase().startsWith("bearer ")) {
+            return bearerToken.substring("bearer ".length());
+        } else throw new IncorrectTokenDataException("Bearer token not provided");
+    }
+
+    public EmployeeDto getEmployeeDtoFromBearerToken(String bearerToken) {
+        Long id = Long.valueOf(verifyToken(getAccessTokenFromBearer(bearerToken)).getSubject());
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotExistsException("id=" + id))
+                .toEmployeeDto();
     }
 }
