@@ -1,11 +1,10 @@
 package Warehouse.WarehouseManager.warehouse;
 
+import Warehouse.WarehouseManager.enums.ProductSize;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Entity
@@ -18,8 +17,12 @@ public class Warehouse {
     private String name;
 
     @Column(nullable = false)
-    private int capacity;
+    private Long capacity;
 
     @Column(nullable = false)
-    private int occupiedArea;
+    private Long occupiedArea;
+
+    public WarehouseDto toWarehouseDto() {
+        return new WarehouseDto(id, name, capacity, occupiedArea);
+    }
 }

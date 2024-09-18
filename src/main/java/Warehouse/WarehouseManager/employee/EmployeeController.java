@@ -3,6 +3,7 @@ package Warehouse.WarehouseManager.employee;
 import Warehouse.WarehouseManager.security.ChangePasswordDto;
 import Warehouse.WarehouseManager.security.LoginResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,11 @@ public class EmployeeController {
     @PatchMapping("/login")
     public ResponseEntity<LoginResponseDto> loginEmployee(@RequestBody EmployeeDto employeeDto) {
         return ResponseEntity.ok(employeeService.employeeLogin(employeeDto));
+    }
+
+    @PatchMapping("/refresh-token")
+    public ResponseEntity<LoginResponseDto> refreshAccessToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerRefreshToken) {
+        return ResponseEntity.ok(employeeService.refreshAccessToken(bearerRefreshToken));
     }
 
     @PatchMapping("/activate/{token}")

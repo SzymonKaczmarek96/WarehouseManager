@@ -37,4 +37,5 @@ public enum Role {
                 .anyMatch(resource1 -> resource1 == resource);
     }
 
+
 }
