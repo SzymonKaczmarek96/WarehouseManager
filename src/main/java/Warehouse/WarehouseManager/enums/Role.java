@@ -18,12 +18,14 @@ public enum Role {
         put(WarehouseSystemOperation.STORE, Arrays.asList(Resource.PRODUCT, Resource.WAREHOUSE_OPERATION));
         put(WarehouseSystemOperation.MODIFY, Arrays.asList(Resource.PRODUCT, Resource.WAREHOUSE_OPERATION));
         put(WarehouseSystemOperation.REMOVAL, Arrays.asList(Resource.PRODUCT, Resource.WAREHOUSE_OPERATION));
+        put(WarehouseSystemOperation.ADD, Arrays.asList(Resource.PRODUCT, Resource.WAREHOUSE_OPERATION));
     }}),
     WAREHOUSE_OPERATOR(new EnumMap<>(WarehouseSystemOperation.class) {{
         put(WarehouseSystemOperation.RECEIVE, Arrays.asList(Resource.PRODUCT));
         put(WarehouseSystemOperation.STORE, Arrays.asList(Resource.PRODUCT));
         put(WarehouseSystemOperation.MODIFY, Arrays.asList(Resource.PRODUCT));
         put(WarehouseSystemOperation.REMOVAL, Arrays.asList(Resource.PRODUCT));
+        put(WarehouseSystemOperation.ADD, Arrays.asList(Resource.PRODUCT));
     }});
 
     private EnumMap<WarehouseSystemOperation, List<Resource>> userAccess;

@@ -1,10 +1,11 @@
 package Warehouse.WarehouseManager.product;
 
+import Warehouse.WarehouseManager.employee.EmployeeDto;
 import Warehouse.WarehouseManager.enums.ProductSize;
-import Warehouse.WarehouseManager.exception.ProductAlreadyExistsException;
-import Warehouse.WarehouseManager.exception.ProductNotExistsException;
-import Warehouse.WarehouseManager.exception.ProductQuantityException;
-import Warehouse.WarehouseManager.exception.StockNotExistsException;
+import Warehouse.WarehouseManager.enums.Resource;
+import Warehouse.WarehouseManager.enums.WarehouseSystemOperation;
+import Warehouse.WarehouseManager.exception.*;
+import Warehouse.WarehouseManager.security.SecurityService;
 import Warehouse.WarehouseManager.stock.Stock;
 import Warehouse.WarehouseManager.stock.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,29 +21,47 @@ public class ProductService {
 
     private StockRepository stockRepository;
 
+    private SecurityService securityService;
+
     @Autowired
-    public ProductService(ProductRepository productRepository, StockRepository stockRepository) {
+    public ProductService(ProductRepository productRepository, StockRepository stockRepository
+            ,SecurityService securityService) {
         this.productRepository = productRepository;
         this.stockRepository = stockRepository;
+        this.securityService = securityService;
     }
 
-    public List<ProductDto> getDtoProductList(){
+    public List<ProductDto> getDtoProductList(String bearerToken){
+        if(checkEmployeeAccess(bearerToken,WarehouseSystemOperation.STORE,Resource.PRODUCT)){
+            throw new AccessDeniedException();
+        }
         return productRepository.findAll().stream().map(Product::toProductDto).toList();
     }
 
-    public ProductDto getProductDtoByProductName(String name){
+    @Transactional
+    public ProductDto getProductDtoByProductName(String name, String bearerToken){
+        if(checkEmployeeAccess(bearerToken,WarehouseSystemOperation.STORE,Resource.PRODUCT)){
+            throw new AccessDeniedException();
+        }
         Product product = productRepository.findByName(name)
                 .orElseThrow(() -> new ProductNotExistsException(name));
         return product.toProductDto();
     }
 
-    public List<ProductDto> getProductDtoListBySize(ProductSize size){
+    @Transactional
+    public List<ProductDto> getProductDtoListBySize(ProductSize size,String bearerToken){
+        if(checkEmployeeAccess(bearerToken, WarehouseSystemOperation.STORE,Resource.PRODUCT)){
+            throw new AccessDeniedException();
+        }
         List<Product> productList = productRepository.findBySize(size);
        return productList.stream().map(product -> product.toProductDto()).toList();
     }
 
     @Transactional
-    public ProductDto addProductToDataBase(ProductDto productDto){
+    public ProductDto addProductDtoToDataBase(ProductDto productDto,String bearerToken){
+        if(checkEmployeeAccess(bearerToken,WarehouseSystemOperation.ADD,Resource.PRODUCT)){
+            throw new AccessDeniedException();
+        }
         if(productRepository.existsByName(productDto.name())){
             throw new ProductAlreadyExistsException(productDto.name());
         }
@@ -53,7 +72,10 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDto modifyProductInformation(String nameOfModifiedProduct,ProductDto productDto){
+    public ProductDto modifyProductInformation(String nameOfModifiedProduct,ProductDto productDto,String bearerToken){
+        if(checkEmployeeAccess(bearerToken,WarehouseSystemOperation.MODIFY,Resource.PRODUCT)){
+            throw new AccessDeniedException();
+        }
         Product product = productRepository
                 .findByName(nameOfModifiedProduct).orElseThrow(()-> new ProductNotExistsException(nameOfModifiedProduct));
         product.setName(productDto.name());
@@ -62,7 +84,10 @@ public class ProductService {
 
 
     @Transactional
-    public void deleteProduct(String productName){
+    public void deleteProduct(String productName,String bearerToken){
+        if(checkEmployeeAccess(bearerToken,WarehouseSystemOperation.REMOVAL,Resource.PRODUCT)){
+            throw new AccessDeniedException();
+        }
         Product product = productRepository
                 .findByName(productName).orElseThrow(()-> new ProductNotExistsException(productName));
         if(checkProductQuantity(productName)){
@@ -78,5 +103,13 @@ public class ProductService {
         return stockRepository.findStockByProductName(productName)
                 .map(stock -> stock.getQuantity() > 0)
                 .orElse(false);
+    }
+
+    private boolean checkEmployeeAccess(String bearerToken,WarehouseSystemOperation warehouseSystemOperation, Resource resource){
+        EmployeeDto employeeDto = securityService.getEmployeeDtoFromBearerToken(bearerToken);
+        if(!employeeDto.role().hasAccessTo(warehouseSystemOperation, resource)){
+            return true;
+        }
+        return false;
     }
 }
