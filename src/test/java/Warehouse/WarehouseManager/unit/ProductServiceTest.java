@@ -1,8 +1,7 @@
-package Warehouse.WarehouseManager;
+package Warehouse.WarehouseManager.unit;
 
 
 import Warehouse.WarehouseManager.employee.EmployeeDto;
-import Warehouse.WarehouseManager.employee.EmployeeRepository;
 import Warehouse.WarehouseManager.enums.ProductSize;
 import Warehouse.WarehouseManager.enums.Resource;
 import Warehouse.WarehouseManager.enums.Role;
