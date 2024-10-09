@@ -42,4 +42,5 @@ public class WarehouseController {
         return ResponseEntity.noContent().build();
     }
 
+
 }
