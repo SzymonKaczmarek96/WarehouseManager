@@ -2,7 +2,6 @@ package Warehouse.WarehouseManager.warehouse;
 
 
 import Warehouse.WarehouseManager.enums.ApprovalStatus;
-import Warehouse.WarehouseManager.enums.CompletionStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -30,27 +29,23 @@ public class WarehouseTaskManagementController {
         return ResponseEntity.ok(warehouseTaskManagementService.getWarehouseTaskListByApproved(warehouseId,approvalStatus));
     }
 
-    @GetMapping("/{warehouseId}/status/completion")
-    public ResponseEntity<WarehouseTasks> getWarehouseTasksListByCompletionStatus(@PathVariable long warehouseId
-            , @RequestBody CompletionStatus completionStatus) {
-        return ResponseEntity.ok(warehouseTaskManagementService.getWarehouseTaskListByCompletionStatus(warehouseId,completionStatus));
-    }
-
     @PostMapping("/{warehouseId}/add")
     public ResponseEntity<WarehouseTask> createWarehouseTask(@PathVariable long warehouseId, @RequestBody WarehouseTask warehouseTask){
         return ResponseEntity.ok().body(warehouseTaskManagementService.createWarehouseTask(warehouseTask,warehouseId));
     }
 
-    @PatchMapping("/{warehouseId}/approval")
-    public ResponseEntity<WarehouseTask> changeApprovalStatus(@PathVariable long warehouseId,@RequestBody long taskId
-            ,@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken){
-        return ResponseEntity.ok(warehouseTaskManagementService.changeApproval(warehouseId,taskId,bearerToken));
+    @PatchMapping("/{warehouseId}/{userId}/approval")
+    public ResponseEntity<WarehouseTask> changeApprovalStatus(@PathVariable long warehouseId,@PathVariable long userId
+            ,@RequestBody long taskId
+            ){
+        return ResponseEntity.ok(warehouseTaskManagementService.changeApproval(warehouseId,userId,taskId));
     }
 
-    @PatchMapping("/{warehouseId}/completion")
-    public ResponseEntity<WarehouseTask> changeCompletionStatus(@PathVariable long warehouseId
-            ,@RequestBody WarehouseTask warehouseTask){
-        return ResponseEntity.ok(warehouseTaskManagementService.completeWarehouseTask(warehouseTask,warehouseId));
+
+    @DeleteMapping("/{warehouseId}")
+    public ResponseEntity deleteTask(@PathVariable long warehouseId, @RequestBody WarehouseTask warehouseTask){
+        warehouseTaskManagementService.deleteWarehouseTask(warehouseId,warehouseTask);
+        return ResponseEntity.noContent().build();
     }
 
 

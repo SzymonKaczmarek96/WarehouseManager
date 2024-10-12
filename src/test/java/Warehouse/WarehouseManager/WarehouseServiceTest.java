@@ -45,7 +45,7 @@ public class WarehouseServiceTest {
     public void shouldFindWarehouseByWarehouseId(){
         //given
         WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(), CompletionStatus.NOT_DONE,
+                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
                 Status.RECEPTION_AREA);
         WarehouseTasks warehouseTasks = new WarehouseTasks();
         warehouseTasks.setWarehouseTaskList(new ArrayList<>(List.of(warehouseTask)));

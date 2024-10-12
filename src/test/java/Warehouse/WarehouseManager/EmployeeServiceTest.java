@@ -64,7 +64,6 @@ public class EmployeeServiceTest {
     @Test
     public void shouldSaveEmployeeToDB(){
         //given
-//        when(bCryptPasswordEncoder.encode(createEmployeeOne().getPassword())).thenReturn("encodedPassword");
         when(securityService.encodePassword(any(String.class))).thenReturn("hashed_password");
         when(employeeRepository.save(any(Employee.class))).thenAnswer(
                 invocationOnMock -> {

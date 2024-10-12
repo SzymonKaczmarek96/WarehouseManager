@@ -1,7 +1,6 @@
 package Warehouse.WarehouseManager.warehouse;
 
 import Warehouse.WarehouseManager.enums.ApprovalStatus;
-import Warehouse.WarehouseManager.enums.CompletionStatus;
 import Warehouse.WarehouseManager.enums.Status;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -32,15 +31,16 @@ public class WarehouseTask implements Serializable{
     @JsonProperty("approval_status")
     private ApprovalStatus approvalStatus = ApprovalStatus.NOT_APPROVED;
 
-    @JsonProperty("task_created_ad")
+    @JsonProperty("task_created_at")
     private LocalDate taskCreatedAt;
 
-    @Enumerated(EnumType.STRING)
-    @JsonProperty("completion_status")
-    private CompletionStatus completionStatus = CompletionStatus.NOT_DONE;
+    @JsonProperty("task_updated_at")
+    private LocalDate taskUpdatedAt;
 
     @Enumerated(EnumType.STRING)
     @JsonProperty("status")
     private Status status;
+
+
 
 }

@@ -1,7 +1,12 @@
 package Warehouse.WarehouseManager.security;
 
+import Warehouse.WarehouseManager.employee.Employee;
 import Warehouse.WarehouseManager.employee.EmployeeDto;
 import Warehouse.WarehouseManager.employee.EmployeeRepository;
+import Warehouse.WarehouseManager.enums.Resource;
+import Warehouse.WarehouseManager.enums.Role;
+import Warehouse.WarehouseManager.enums.WarehouseSystemOperation;
+import Warehouse.WarehouseManager.exception.AccessDeniedException;
 import Warehouse.WarehouseManager.exception.EmployeeNotExistsException;
 import Warehouse.WarehouseManager.exception.EmptyDataException;
 import Warehouse.WarehouseManager.exception.IncorrectTokenDataException;
@@ -68,4 +73,11 @@ public class SecurityService {
                 .orElseThrow(() -> new EmployeeNotExistsException("id=" + id))
                 .toEmployeeDto();
     }
+
+    public void checkEmployeeAccess(Role role, WarehouseSystemOperation warehouseSystemOperation, Resource resource){
+        if(!role.hasAccessTo(warehouseSystemOperation,resource)){
+            throw new AccessDeniedException();
+        }
+    }
+
 }

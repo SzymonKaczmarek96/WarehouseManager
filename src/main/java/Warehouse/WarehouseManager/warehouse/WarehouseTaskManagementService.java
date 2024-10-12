@@ -5,6 +5,7 @@ import Warehouse.WarehouseManager.employee.EmployeeDto;
 import Warehouse.WarehouseManager.employee.EmployeeService;
 import Warehouse.WarehouseManager.enums.*;
 import Warehouse.WarehouseManager.exception.*;
+import Warehouse.WarehouseManager.product.Product;
 import Warehouse.WarehouseManager.product.ProductRepository;
 import Warehouse.WarehouseManager.security.SecurityService;
 import Warehouse.WarehouseManager.stock.Stock;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,19 +48,19 @@ public class WarehouseTaskManagementService {
         validateOfProduct(warehouseTask.getProductId());
         validateOfStatus(warehouseTask.getStatus());
         checkQuantityStockBeforeReleaseWithWarehouse(warehouseTask.getStatus(), warehouseTask.getProductId(), warehouseTask.getQuantity());
-        warehouse.setWarehouseTasks(new WarehouseTasks(new ArrayList<>(Arrays.asList(warehouseTask))));
+        checkWarehouseCapacity(warehouse,warehouseTask);
+        warehouse.setWarehouseTasks(addTaskIntoList(warehouse.getWarehouseTasks(),warehouseTask));
         warehouseRepository.save(warehouse);
         return warehouseTask;
     }
 
     @Transactional
-    public WarehouseTask changeApproval(long warehouseId,long warehouseTaskId,String bearerToken){
-        if(checkEmployeeAccess(bearerToken, WarehouseSystemOperation.MODIFY, Resource.WAREHOUSE_OPERATION)){
-            throw new AccessDeniedException();
-        }
+    public WarehouseTask changeApproval(long warehouseId,long employeeId,long warehouseTaskId){
+        securityService.checkEmployeeAccess(employeeService.getEmployeeRoleByEmployeeId(employeeId)
+                ,WarehouseSystemOperation.MODIFY,Resource.WAREHOUSE_OPERATION);
         Warehouse warehouse = warehouseRepository.findById(warehouseId).orElseThrow(WarehouseNotFoundException::new);
         WarehouseTask warehouseTask = warehouse.getWarehouseTasks().getWarehouseTaskList()
-                .stream().filter(task -> warehouseTaskId == task.getId()).findFirst().get();
+                .stream().filter(task -> warehouseTaskId == task.getId()).findFirst().orElseThrow(WarehouseTaskNotExistsException::new);
         warehouseTask.setApprovalStatus(ApprovalStatus.APPROVED);
         warehouse.setWarehouseTasks(new WarehouseTasks(new ArrayList<>(List.of(warehouseTask))));
         warehouseRepository.save(warehouse);
@@ -66,6 +68,7 @@ public class WarehouseTaskManagementService {
     }
 
     @Transactional
+    //not working
     public WarehouseTask completeWarehouseTask(WarehouseTask warehouseTask, long warehouseId){
         if(warehouseTask.getApprovalStatus().equals(ApprovalStatus.NOT_APPROVED)){
             throw new TaskNotApprovedException();
@@ -74,39 +77,61 @@ public class WarehouseTaskManagementService {
         validateOfStatus(warehouseTask.getStatus());
         validateOfProduct(warehouseTask.getProductId());
         quantityChange(warehouseTask.getStatus(),warehouseTask.getQuantity(),warehouseTask.getProductId());
-        warehouseTask.setCompletionStatus(CompletionStatus.DONE);
+        warehouseTask.setApprovalStatus(ApprovalStatus.DONE);
         return warehouse.getWarehouseTasks().getWarehouseTaskList().stream()
-                .filter(task -> warehouseTask.getId() == task.getId()).findFirst().get();
+                .filter(task -> warehouseTask.getId() == task.getId()).findFirst().orElseThrow(WarehouseTaskNotExistsException::new);
     }
 
-    @Transactional
+
     public WarehouseTasks getWarehouseTaskListByApproved(long warehouseId,ApprovalStatus approvalStatus){
         Warehouse warehouse = warehouseRepository.findById(warehouseId).orElseThrow(WarehouseNotFoundException::new);
-        if(approvalStatus.equals(ApprovalStatus.APPROVED)){
             return new WarehouseTasks(warehouse.getWarehouseTasks().getWarehouseTaskList()
                     .stream().filter(warehouseTask -> warehouseTask.getApprovalStatus()
-                            .equals(ApprovalStatus.APPROVED)).toList());
-        }
-        return new WarehouseTasks(warehouse.getWarehouseTasks().getWarehouseTaskList()
-                .stream().filter(warehouseTask -> warehouseTask.getApprovalStatus()
-                        .equals(ApprovalStatus.NOT_APPROVED)).toList());
+                            .equals(approvalStatus)).toList());
+    }
+
+
+    @Transactional
+    public WarehouseTask updateWarehouseTaskInformation(long warehouseId,WarehouseTask warehouseTask){
+        Warehouse warehouse = warehouseRepository.findById(warehouseId).orElseThrow(WarehouseNotFoundException::new);
+        WarehouseTask foundTask = findTheTask(warehouse.getWarehouseTasks(),warehouseTask);
+        validateOfProduct(warehouseTask.getProductId());
+        validateOfStatus(warehouseTask.getStatus());
+        checkQuantityStockBeforeReleaseWithWarehouse(warehouseTask.getStatus(), warehouseTask.getProductId(), warehouseTask.getQuantity());
+        foundTask.setProductId(warehouseTask.getProductId());
+        foundTask.setQuantity(warehouseTask.getQuantity());
+        foundTask.setApprovalStatus(ApprovalStatus.NOT_APPROVED);
+        foundTask.setTaskCreatedAt(LocalDate.now());
+        foundTask.setStatus(warehouseTask.getStatus());
+        warehouseRepository.save(warehouse);
+        return foundTask;
     }
 
     @Transactional
-    public WarehouseTasks getWarehouseTaskListByCompletionStatus(long warehouseId,CompletionStatus completionStatus){
+    public void deleteWarehouseTask(long warehouseId, WarehouseTask warehouseTask){
         Warehouse warehouse = warehouseRepository.findById(warehouseId).orElseThrow(WarehouseNotFoundException::new);
-        if(completionStatus.equals(CompletionStatus.NOT_DONE)){
-            return new WarehouseTasks(warehouse.getWarehouseTasks().getWarehouseTaskList()
-                    .stream().filter(warehouseTask -> warehouseTask.getCompletionStatus()
-                            .equals(CompletionStatus.NOT_DONE)).toList());
-        }
-        return new WarehouseTasks(warehouse.getWarehouseTasks().getWarehouseTaskList()
-                .stream().filter(warehouseTask -> warehouseTask.getCompletionStatus()
-                        .equals(CompletionStatus.DONE)).toList());
+        warehouse.setWarehouseTasks(deleteTaskWithTaskList(warehouse.getWarehouseTasks(),warehouseTask));
+        warehouseRepository.save(warehouse);
+    }
+    private WarehouseTasks addTaskIntoList(WarehouseTasks warehouseTasks, WarehouseTask warehouseTask){
+        warehouseTasks.getWarehouseTaskList().add(warehouseTask);
+        return warehouseTasks;
     }
 
-    //TODO wonder about capacity with task done example method warehouseCapacityChange(), add delete task, test, controller
-    //TODO wonder about method into a modify the whole task
+    private WarehouseTasks deleteTaskWithTaskList(WarehouseTasks warehouseTasks, WarehouseTask warehouseTask){
+        warehouseTasks.getWarehouseTaskList().removeIf(task -> task.getId() == warehouseTask.getId());
+        return warehouseTasks;
+    }
+
+    private WarehouseTask findTheTask(WarehouseTasks warehouseTasks, WarehouseTask warehouseTask){
+        return warehouseTasks.getWarehouseTaskList().stream()
+                .filter(task -> task.getId() == warehouseTask.getId()).findFirst()
+                .orElseThrow(WarehouseTaskNotExistsException::new);
+    }
+
+
+    //TODO wonder about capacity with task done example method warehouseCapacityChange()
+    //TODO wonder about method into a modify the whole task - test
     @Transactional
     private void quantityChange(Status status, long quantity, long productId){
         Stock stock = stockRepository.findStockByProductId(productId).orElseThrow(StockNotExistsException::new);
@@ -118,13 +143,15 @@ public class WarehouseTaskManagementService {
         stockRepository.save(stock);
     }
 
-    private boolean checkEmployeeAccess(String bearerToken,WarehouseSystemOperation warehouseSystemOperation, Resource resource){
-        EmployeeDto employeeDto = securityService.getEmployeeDtoFromBearerToken(bearerToken);
-        if(!employeeDto.role().hasAccessTo(warehouseSystemOperation, resource)){
-            return true;
+    private void checkWarehouseCapacity(Warehouse warehouse, WarehouseTask warehouseTask){
+        long currentWarehouseCapacity = warehouse.getCapacity() - warehouse.getOccupiedArea();
+        Product product = productRepository.findById(warehouseTask.getProductId())
+                .orElseThrow(() -> new ProductNotExistsException("Product"));
+        if(currentWarehouseCapacity < (product.getSize().getValue() * warehouseTask.getQuantity())){
+            throw new WarehouseCapacityExceededException();
         }
-        return false;
     }
+
 
     private void validateOfProduct(long productId){
         if(!productRepository.existsById(productId)){
@@ -141,9 +168,9 @@ public class WarehouseTaskManagementService {
         }
     }
 
-    private void checkQuantityStockBeforeReleaseWithWarehouse(Status status,long stockId,long quantity){
+    private void checkQuantityStockBeforeReleaseWithWarehouse(Status status,long productId,long quantity){
         if(status.equals(Status.RELEASE_AREA)){
-            Stock stock = stockRepository.findById(stockId).orElseThrow(StockNotExistsException::new);
+            Stock stock = stockRepository.findStockByProductId(productId).orElseThrow(StockNotExistsException::new);
             if(stock.getQuantity() < quantity){
                 throw new StockQuantityException();
             }
