@@ -2,11 +2,12 @@ package Warehouse.WarehouseManager.product;
 
 import Warehouse.WarehouseManager.enums.ProductSize;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.engine.jdbc.Size;
-import org.springframework.stereotype.Service;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.*;
+import java.util.EnumSet;
 
 @AllArgsConstructor
 @NoArgsConstructor

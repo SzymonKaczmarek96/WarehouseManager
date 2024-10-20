@@ -16,7 +16,7 @@ CREATE TABLE if NOT EXISTS warehouse (
     warehouse_name VARCHAR(50) UNIQUE NOT NULL,
     capacity INT NOT NULL,
     occupied_area INT NOT NULL,
-    products JSONB
+    warehouse_tasks JSONB
 );
 
 CREATE TABLE if NOT EXISTS product (

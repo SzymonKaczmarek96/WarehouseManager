@@ -1,8 +1,10 @@
 package Warehouse.WarehouseManager.enums;
 
 public enum Status {
-    DELIVERED,
+
+    RECEPTION_AREA,
+    RELEASE_AREA,
     STORED,
-    SHIPMENT_READY,
-    SHIPPED;
+    SHIPPED,
+
 }

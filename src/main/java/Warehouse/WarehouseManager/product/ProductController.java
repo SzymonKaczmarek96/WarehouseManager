@@ -20,38 +20,38 @@ public class ProductController {
     }
 
 
-    @GetMapping
-    public ResponseEntity<List<ProductDto>> getProductList(@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken){
-        return ResponseEntity.ok(productService.getDtoProductList(bearerToken));
+    @GetMapping("/{employeeId}")
+    public ResponseEntity<List<ProductDto>> getProductList(@PathVariable long employeeId){
+        return ResponseEntity.ok(productService.getDtoProductList(employeeId));
     }
 
-    @GetMapping("/{name}")
-    public ResponseEntity<ProductDto> getProductByProductName(@PathVariable String name
-            ,@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken){
-        return ResponseEntity.ok(productService.getProductDtoByProductName(name,bearerToken));
+    @GetMapping("/{productName}/{employeeId}")
+    public ResponseEntity<ProductDto> getProductByProductName(@PathVariable String productName
+            ,@PathVariable long employeeId){
+        return ResponseEntity.ok(productService.getProductDtoByProductName(productName,employeeId));
     }
 
-    @GetMapping("/size")
+    @GetMapping("/{employeeId}/size")
     public ResponseEntity<List<ProductDto>> getProductListByProductSize(@RequestBody ProductSize size
-            ,@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken){
-        return ResponseEntity.ok().body(productService.getProductDtoListBySize(size,bearerToken));
+            ,@PathVariable long employeeId){
+        return ResponseEntity.ok().body(productService.getProductDtoListBySize(size,employeeId));
     }
 
-    @PostMapping("/add")
+    @PostMapping("/{employeeId}/add")
     public ResponseEntity<ProductDto> addProduct(@RequestBody ProductDto productDto
-            ,@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken){
-        return ResponseEntity.ok().body(productService.addProductDtoToDataBase(productDto,bearerToken));
+            ,@PathVariable long employeeId){
+        return ResponseEntity.ok().body(productService.addProductDto(productDto,employeeId));
     }
 
-    @PutMapping("/{name}/update")
-    public ResponseEntity<ProductDto> updateProductInformation(@PathVariable String name, @RequestBody ProductDto productDto
-    ,@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerString){
-        return ResponseEntity.ok(productService.modifyProductInformation(name,productDto,bearerString));
+    @PutMapping("/{productName}/{employeeId}/update")
+    public ResponseEntity<ProductDto> updateProductInformation(@RequestBody ProductDto productDto
+            ,@PathVariable String productName,@PathVariable long employeeId){
+        return ResponseEntity.ok(productService.modifyProductInformation(productDto,employeeId,productName));
     }
 
-    @DeleteMapping("/{name}/delete")
-    public ResponseEntity deleteProduct(@PathVariable String name,@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken){
-        productService.deleteProduct(name,bearerToken);
+    @DeleteMapping("/{productName}/{employeeId}")
+    public ResponseEntity deleteProduct(@PathVariable String productName, @PathVariable long employeeId){
+        productService.deleteProduct(productName,employeeId);
         return ResponseEntity.noContent().build();
     }
 
