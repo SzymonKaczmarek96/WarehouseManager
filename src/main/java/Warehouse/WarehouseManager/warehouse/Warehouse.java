@@ -1,6 +1,10 @@
 package Warehouse.WarehouseManager.warehouse;
 
+import Warehouse.WarehouseManager.enums.Status;
 import Warehouse.WarehouseManager.exception.OccupiedAreaQuantityException;
+import Warehouse.WarehouseManager.exception.WarehouseCapacityExceededException;
+import Warehouse.WarehouseManager.exception.WarehouseTaskNotExistsException;
+import Warehouse.WarehouseManager.product.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,13 +39,17 @@ public class Warehouse {
     private WarehouseTasks warehouseTasks;
 
     public WarehouseDto toWarehouseDto() {
-        return new WarehouseDto(id, name, capacity, occupiedArea,warehouseTasks);
+        return new WarehouseDto(id, name, capacity, occupiedArea, warehouseTasks);
     }
 
     public void setOccupiedArea(Long occupiedArea) {
-        if(occupiedArea < -1 || occupiedArea > capacity){
+        if (occupiedArea < -1 || occupiedArea > capacity) {
             throw new OccupiedAreaQuantityException();
         }
         this.occupiedArea = occupiedArea;
+
+    }
+    public long calculateAvailableWarehouseCapacity() {
+        return getCapacity() - getOccupiedArea();
     }
 }

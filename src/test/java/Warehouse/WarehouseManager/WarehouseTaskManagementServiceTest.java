@@ -2,8 +2,6 @@ package Warehouse.WarehouseManager;
 
 
 import Warehouse.WarehouseManager.employee.Employee;
-import Warehouse.WarehouseManager.employee.EmployeeDto;
-import Warehouse.WarehouseManager.employee.EmployeeRepository;
 import Warehouse.WarehouseManager.employee.EmployeeService;
 import Warehouse.WarehouseManager.enums.*;
 import Warehouse.WarehouseManager.exception.*;
@@ -30,7 +28,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class WarehouseManagementServiceTest {
+public class WarehouseTaskManagementServiceTest {
     @Mock
     private ProductRepository productRepository;
     @Mock
@@ -58,93 +56,62 @@ public class WarehouseManagementServiceTest {
     @Test
     public void shouldCreateWarehouseTask(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 40L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RECEPTION_AREA);
-        Product product = new Product(1L,"Product",ProductSize.MEDIUM);
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         when(productRepository.existsById(1L)).thenReturn(true);
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(createProductWithProductSizeMedium()));
+        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(createStockWithFiftyQuantity()));
         //when
-        WarehouseTask task = warehouseManagementTaskService.createWarehouseTask(warehouseTask,1L);
+        WarehouseTask task = warehouseManagementTaskService.createWarehouseTask
+                (createWarehouseTaskWithNotApprovedStatus(),1L);
         //then
-        assertEquals(1L,warehouseTask.getId());
-        assertEquals(1L,warehouseTask.getProductId());
-        assertEquals(40,warehouseTask.getQuantity());
+        assertEquals(1L,createWarehouseTaskWithNotApprovedStatus().getId());
+        assertEquals(1L,createWarehouseTaskWithNotApprovedStatus().getProductId());
+        assertEquals(50,createWarehouseTaskWithNotApprovedStatus().getQuantity());
         assertTrue(task.getApprovalStatus().equals(ApprovalStatus.NOT_APPROVED));
-
-        assertEquals(Status.RECEPTION_AREA,task.getStatus());
+        assertEquals(Status.RELEASE_AREA,task.getStatus());
     }
     @Test
     public void shouldThrowWarehouseNotFoundExceptionWhenWarehouseNotExists(){
         //when then
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RECEPTION_AREA);
         assertThrows(WarehouseNotFoundException.class, () -> warehouseManagementTaskService.createWarehouseTask(
-                warehouseTask,1L));
+                createWarehouseTaskWithNotApprovedStatus(),1L));
     }
 
     @Test
     public void shouldThrowProductNotExistsExceptionWhenProductNotExists(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RECEPTION_AREA);
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         //when then
         assertThrows(ProductNotExistsException.class, () -> warehouseManagementTaskService.createWarehouseTask(
-                warehouseTask,1L));
+                createWarehouseTaskWithNotApprovedStatus(),1L));
     }
 
     @Test
     public void shouldThrowStockQuantityExceptionWhenStockIsLessThenRelease(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 60L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
-        Product product1 = new Product(1L,"Product", ProductSize.MEDIUM);
-        Stock stock = new Stock(1L,product1,createWarehouseWithTaskList(),50L);
+
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         when(productRepository.existsById(1L)).thenReturn(true);
-        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(createStockWithFiftyQuantity()));
         //when then
         assertThrows(StockQuantityException.class,() -> warehouseManagementTaskService.createWarehouseTask(
-                warehouseTask,1L));
+                createWarehouseTaskWithSixtyQuantity(),1L));
     }
 
     @Test
     public void shouldThrowIncorrectStatusExceptionWhenStatusIsNotCorrect(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.SHIPPED);
-        Warehouse warehouse1 = new Warehouse(1L,"M1",1000000L,0L
-                ,new WarehouseTasks(List.of(warehouseTask)));
-        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(warehouse1));
+        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithOccupiedArea()));
         when(productRepository.existsById(1L)).thenReturn(true);
         //when then
-        assertThrows(IncorrectStatusException.class,() -> warehouseManagementTaskService.createWarehouseTask(warehouseTask,1L));
+        assertThrows(IncorrectStatusException.class,() -> warehouseManagementTaskService.createWarehouseTask
+                (createWarehouseTaskWithShippedStatusAndNotApproved(),1L));
     }
 
     @Test
     public void shouldChangeApproval(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.SHIPPED);
-        Employee employee = new Employee(
-                1L,
-                "",
-                "szymon@interia.pl",
-                "hashed_password",
-                true,
-                Role.BUSINESS_OWNER,
-                "access_token_value",
-                "refresh_token_value",
-                LocalDateTime.of(2023, 9, 15, 12, 0),
-                LocalDateTime.of(2024, 9, 15, 12, 0));
-        when(employeeService.getEmployeeRoleByEmployeeId(1L)).thenReturn(employee.getRole());
+        when(employeeService.getEmployeeRoleByEmployeeId(1L)).thenReturn(createEmployee().getRole());
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         //when
         WarehouseTask task = warehouseManagementTaskService.changeApproval(1L,1L,1L);
@@ -155,20 +122,9 @@ public class WarehouseManagementServiceTest {
     @Test
     public void shouldThrowAccessDeniedExceptionWhenEmployeeLacksModifyAccess(){
         //given
-        Employee employee = new Employee(
-                1L,
-                "",
-                "szymon@interia.pl",
-                "hashed_password",
-                true,
-                Role.WAREHOUSE_OPERATOR,
-                "access_token_value",
-                "refresh_token_value",
-                LocalDateTime.of(2023, 9, 15, 12, 0),
-                LocalDateTime.of(2024, 9, 15, 12, 0));
-        when(employeeService.getEmployeeRoleByEmployeeId(1L)).thenReturn(employee.getRole());
+        when(employeeService.getEmployeeRoleByEmployeeId(1L)).thenReturn(createEmployee().getRole());
         doThrow(new AccessDeniedException()).when(securityService)
-                .checkEmployeeAccess(employee.getRole(), WarehouseSystemOperation.MODIFY, Resource.WAREHOUSE_OPERATION);
+                .checkEmployeeAccess(createEmployee().getRole(), WarehouseSystemOperation.MODIFY, Resource.WAREHOUSE_OPERATION);
         //when then
         assertThrows(AccessDeniedException.class, () ->
                 warehouseManagementTaskService.changeApproval(1L,1L,1L));
@@ -177,18 +133,7 @@ public class WarehouseManagementServiceTest {
     @Test
     public void shouldThrowWarehouseNotFoundExceptionWhenChangingApprovalWithInvalidWarehouseId(){
         //given
-        Employee employee = new Employee(
-                1L,
-                "",
-                "szymon@interia.pl",
-                "hashed_password",
-                true,
-                Role.BUSINESS_OWNER,
-                "access_token_value",
-                "refresh_token_value",
-                LocalDateTime.of(2023, 9, 15, 12, 0),
-                LocalDateTime.of(2024, 9, 15, 12, 0));
-        when(employeeService.getEmployeeRoleByEmployeeId(1L)).thenReturn(employee.getRole());
+        when(employeeService.getEmployeeRoleByEmployeeId(1L)).thenReturn(createEmployee().getRole());
         //when then
         assertThrows(WarehouseNotFoundException.class,()-> warehouseManagementTaskService.changeApproval(1L,1L,1L));
     }
@@ -196,43 +141,38 @@ public class WarehouseManagementServiceTest {
     @Test
     public void shouldCompleteWarehouseOperationsWhenStatusIsReceptionArea(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
-        Product product1 = new Product(1L,"Product", ProductSize.MEDIUM);
-        Stock stock = new Stock(1L,product1,createWarehouseWithTaskList(),60L);
-        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
+        Warehouse warehouse = createWarehouseWithTaskList();
+        when(productRepository.findById(1L)).thenReturn(Optional.of(createProductWithProductSizeMedium()));
+        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(warehouse));
         when(productRepository.existsById(1L)).thenReturn(true);
-        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(createStockWithFiftyQuantity()));
         //when
-        WarehouseTask task = warehouseManagementTaskService.completeWarehouseTask(warehouseTask,1L);
+        WarehouseTask task = warehouseManagementTaskService.completeWarehouseTask(createWarehouseTaskWithStatusReceptionArea(),1L);
         //given
-        assertEquals(ApprovalStatus.DONE,task.getApprovalStatus());
+        assertEquals(ApprovalStatus.APPROVED,task.getApprovalStatus());
+        assertEquals(500,warehouse.getOccupiedArea());
     }
 
     @Test
     public void shouldCompleteWarehouseOperationsWhenStatusIsReleaseArea(){
         //given
-        Product product1 = new Product(1L,"Product", ProductSize.MEDIUM);
-        Stock stock = new Stock(1L,product1,createWarehouseWithTaskList(),60L);
-        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
+        Warehouse warehouse = createWarehouseWithOccupiedArea();
+        when(productRepository.findById(1L)).thenReturn(Optional.of(createProductWithProductSizeMedium()));
+        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(warehouse));
         when(productRepository.existsById(1L)).thenReturn(true);
-        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(stock));
+        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(createStockWithFiftyQuantity()));
         //when
-        WarehouseTask task = warehouseManagementTaskService.completeWarehouseTask(createWarehouseTaskListForTest().get(0)
-                ,1L);
+        WarehouseTask task = warehouseManagementTaskService.completeWarehouseTask(createWarehouseTaskWithStatusReleaseArea(),1L);
         //then
         assertEquals(ApprovalStatus.APPROVED,task.getApprovalStatus());
+        assertEquals(500,warehouse.getOccupiedArea());
     }
 
     @Test
     public void shouldThrowTaskNotApprovedExceptionWhenTaskIsNotApproved(){
-        //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
         //when then
-        assertThrows(TaskNotApprovedException.class,()-> warehouseManagementTaskService.completeWarehouseTask(warehouseTask,1L));
+        assertThrows(TaskNotApprovedException.class,()-> warehouseManagementTaskService.completeWarehouseTask
+                (createWarehouseTaskWithNotApprovedStatus(),1L));
     }
 
     @Test
@@ -243,50 +183,40 @@ public class WarehouseManagementServiceTest {
                 Status.SHIPPED);;
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         //when then
-        assertThrows(IncorrectStatusException.class,() -> warehouseManagementTaskService.completeWarehouseTask(warehouseTask,1L));
+        assertThrows(IncorrectStatusException.class,() -> warehouseManagementTaskService.completeWarehouseTask
+                (createWarehouseTaskWithShippedStatusAndApproved(),1L));
     }
 
     @Test
     public void shouldThrowWarehouseNotFoundExceptionWhenCompleteTaskWithInvalidWarehouseId() {
-        //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
         //when then
-        assertThrows(WarehouseNotFoundException.class,()-> warehouseManagementTaskService.completeWarehouseTask(warehouseTask,1L));
+        assertThrows(WarehouseNotFoundException.class,()-> warehouseManagementTaskService.completeWarehouseTask
+                (createWarehouseTaskWithShippedStatusAndApproved(),1L));
     }
 
     @Test
     public void shouldThrowProductNotExistsExceptionWhenCompleteTaskHasNotExistingProduct(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RECEPTION_AREA);
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         //when then
         assertThrows(ProductNotExistsException.class, () -> warehouseManagementTaskService.createWarehouseTask(
-                warehouseTask,1L));
+                createWarehouseTaskWithSixtyQuantity(),1L));
     }
 
 
     @Test
     public void shouldThrowStockNotExistsExceptionWhenCompleteTaskHasNotExistingStock(){
         //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         when(productRepository.existsById(1L)).thenReturn(true);
         //when then
         assertThrows(StockNotExistsException.class, () -> warehouseManagementTaskService.createWarehouseTask(
-                warehouseTask,1L));
+                createWarehouseTaskWithSixtyQuantity(),1L));
     }
 
     @Test
     public void shouldFindTaskListByApprovedStatus(){
         //given
-        Warehouse warehouse = new Warehouse(1L,"M1",1000000L,0L
-                ,new WarehouseTasks(createWarehouseTaskListForTest()));
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
         //when
         WarehouseTasks warehouseTaskList = warehouseManagementTaskService.getWarehouseTaskListByApproved(1L,ApprovalStatus.APPROVED);
@@ -308,10 +238,6 @@ public class WarehouseManagementServiceTest {
 
     @Test
     public void shouldThrowWarehouseNotFoundExceptionWhenFindTaskByApprovedStatusWithInvalidWarehouseId(){
-        //given
-        WarehouseTask warehouseTask = new WarehouseTask(
-                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
         //when then
         assertThrows(WarehouseNotFoundException.class, () -> warehouseManagementTaskService.getWarehouseTaskListByApproved(1L,ApprovalStatus.APPROVED));
     }
@@ -338,6 +264,25 @@ public class WarehouseManagementServiceTest {
         assertEquals(1,warehouseTaskList.getWarehouseTaskList().size());
     }
 
+    @Test
+    public void shouldThrowWarehouseCapacityExceededExceptionWhenCapacityIsNotEnough(){
+            //given
+            when(productRepository.findById(1L)).thenReturn(Optional.of(createProductWithProductSizeMedium()));
+            when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
+            when(productRepository.existsById(1L)).thenReturn(true);
+            //when given
+            assertThrows(WarehouseCapacityExceededException.class,() -> warehouseManagementTaskService.createWarehouseTask
+                    (createWarehouseTaskWithTooBigCapacityForWarehouse(),1L));
+    }
+
+    @Test
+    public void shouldThrowProductNotExistsExceptionWhenProductNotExistsInWarehouse(){
+        //given
+        when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
+        //when then
+        assertThrows(ProductNotExistsException.class,() -> warehouseManagementTaskService.createWarehouseTask(createWarehouseTaskWithStatusReceptionArea(),1L));
+    }
+
 
     @Test
     public void shouldDeleteTask(){
@@ -348,7 +293,7 @@ public class WarehouseManagementServiceTest {
         Warehouse warehouse = createWarehouseWithTaskList();
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(warehouse));
         //when
-        warehouseManagementTaskService.deleteWarehouseTask(1L,warehouseTask1);
+        warehouseManagementTaskService.deleteWarehouseTask(1L,createWarehouseTaskWithStatusReceptionArea());
         //then
         assertEquals(2,warehouse.getWarehouseTasks().getWarehouseTaskList().size());
     }
@@ -356,18 +301,15 @@ public class WarehouseManagementServiceTest {
     @Test
     public void shouldUpdateWarehouseTaskWhenStatusIsReceptionArea(){
         //given
-        WarehouseTask warehouseTask1 = new WarehouseTask(
-                3L, 4L, 100L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RECEPTION_AREA);
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
-        when(productRepository.existsById(4L)).thenReturn(true);
-
+        when(productRepository.existsById(1L)).thenReturn(true);
         //when
-        WarehouseTask warehouseTask = warehouseManagementTaskService.updateWarehouseTaskInformation(1L,warehouseTask1);
+        WarehouseTask warehouseTask = warehouseManagementTaskService.modifyWarehouseTaskInformation
+                (1L,createWarehouseTaskWithStatusReceptionArea());
         //then
-        assertEquals(3L,warehouseTask.getId());
-        assertEquals(4L,warehouseTask.getProductId());
-        assertEquals(100L,warehouseTask.getQuantity());
+        assertEquals(1L,warehouseTask.getId());
+        assertEquals(1L,warehouseTask.getProductId());
+        assertEquals(50L,warehouseTask.getQuantity());
         assertEquals(ApprovalStatus.NOT_APPROVED,warehouseTask.getApprovalStatus());
         assertEquals(Status.RECEPTION_AREA,warehouseTask.getStatus());
 
@@ -376,20 +318,16 @@ public class WarehouseManagementServiceTest {
     @Test
     public void shouldUpdateWarehouseTaskWhenStatusIsReleaseArea(){
         //given
-        WarehouseTask warehouseTask1 = new WarehouseTask(
-                3L, 4L, 40L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
-                Status.RELEASE_AREA);
-        Product product1 = new Product(4L,"Product", ProductSize.MEDIUM);
-        Stock stock = new Stock(1L,product1,createWarehouseWithTaskList(),60L);
         when(warehouseRepository.findById(1L)).thenReturn(Optional.of(createWarehouseWithTaskList()));
-        when(productRepository.existsById(4L)).thenReturn(true);
-        when(stockRepository.findStockByProductId(4L)).thenReturn(Optional.of(stock));
+        when(productRepository.existsById(1L)).thenReturn(true);
+        when(stockRepository.findStockByProductId(1L)).thenReturn(Optional.of(createStockWithFiftyQuantity()));
         //when
-        WarehouseTask warehouseTask = warehouseManagementTaskService.updateWarehouseTaskInformation(1L,warehouseTask1);
+        WarehouseTask warehouseTask = warehouseManagementTaskService.modifyWarehouseTaskInformation
+                (1L,createWarehouseTaskWithStatusReleaseArea());
         //then
-        assertEquals(3L,warehouseTask.getId());
-        assertEquals(4L,warehouseTask.getProductId());
-        assertEquals(40L,warehouseTask.getQuantity());
+        assertEquals(1L,warehouseTask.getId());
+        assertEquals(1L,warehouseTask.getProductId());
+        assertEquals(50L,warehouseTask.getQuantity());
         assertEquals(ApprovalStatus.NOT_APPROVED,warehouseTask.getApprovalStatus());
         assertEquals(Status.RELEASE_AREA,warehouseTask.getStatus());
     }
@@ -416,5 +354,74 @@ public class WarehouseManagementServiceTest {
                 ,new WarehouseTasks(createWarehouseTaskListForTest()));
     }
 
+    private WarehouseTask createWarehouseTaskWithStatusReleaseArea(){
+        return new WarehouseTask(
+                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.RELEASE_AREA);
+    }
+
+    private Warehouse createWarehouseWithOccupiedArea(){
+
+        return new Warehouse(1L,"M1",1000000L,1000L
+                ,new WarehouseTasks(List.of(createWarehouseTaskWithStatusReleaseArea())));
+    }
+
+    private WarehouseTask createWarehouseTaskWithNotApprovedStatus(){
+        return new WarehouseTask(
+                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.RELEASE_AREA);
+    }
+
+    private WarehouseTask createWarehouseTaskWithTooBigCapacityForWarehouse(){
+        return new WarehouseTask(
+                1L, 1L, 1000000L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.RECEPTION_AREA);
+    }
+
+    private WarehouseTask createWarehouseTaskWithStatusReceptionArea(){
+        return new WarehouseTask(
+                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.RECEPTION_AREA);
+    }
+
+    private Stock createStockWithFiftyQuantity(){
+        return new Stock(1L,createProductWithProductSizeMedium(),createWarehouseWithTaskList(),50L);
+    }
+
+    private Product createProductWithProductSizeMedium(){
+        return new Product(1L,"Product", ProductSize.MEDIUM);
+    }
+
+    private WarehouseTask createWarehouseTaskWithSixtyQuantity(){
+        return new WarehouseTask(
+                1L, 1L, 60L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.RELEASE_AREA);
+    }
+
+    private WarehouseTask createWarehouseTaskWithShippedStatusAndNotApproved(){
+        return new WarehouseTask(
+                1L, 1L, 50L, ApprovalStatus.NOT_APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.SHIPPED);
+    }
+
+    private WarehouseTask createWarehouseTaskWithShippedStatusAndApproved(){
+        return new WarehouseTask(
+                1L, 1L, 50L, ApprovalStatus.APPROVED, LocalDate.now(),LocalDate.now(),
+                Status.SHIPPED);
+    }
+
+    private Employee createEmployee(){
+        return new Employee(
+                1L,
+                "Szymon",
+                "szymon@interia.pl",
+                "hashed_password",
+                true,
+                Role.WAREHOUSE_OPERATOR,
+                "access_token_value",
+                "refresh_token_value",
+                LocalDateTime.of(2023, 9, 15, 12, 0),
+                LocalDateTime.of(2024, 9, 15, 12, 0));
+    }
 
 }
