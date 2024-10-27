@@ -6,7 +6,10 @@ import Warehouse.WarehouseManager.enums.ProductSize;
 import Warehouse.WarehouseManager.enums.Resource;
 import Warehouse.WarehouseManager.enums.Role;
 import Warehouse.WarehouseManager.enums.WarehouseSystemOperation;
-import Warehouse.WarehouseManager.exception.*;
+import Warehouse.WarehouseManager.exception.ProductAlreadyExistsException;
+import Warehouse.WarehouseManager.exception.ProductNotExistsException;
+import Warehouse.WarehouseManager.exception.ProductQuantityException;
+import Warehouse.WarehouseManager.exception.StockNotExistsException;
 import Warehouse.WarehouseManager.reportgenerator.PDFReportGenerator;
 import Warehouse.WarehouseManager.security.SecurityService;
 import Warehouse.WarehouseManager.stock.Stock;
@@ -33,21 +36,15 @@ public class ProductService {
 
     private final String TOPIC_NAME = "new-topic";
 
-    private ProductConsumer productConsumer;
-
-    private PDFReportGenerator pdfReportGenerator;
 
     @Autowired
     public ProductService(ProductRepository productRepository, StockRepository stockRepository
-            ,SecurityService securityService, EmployeeService employeeService,KafkaTemplate kafkaTemplate
-    ,ProductConsumer productConsumer, PDFReportGenerator pdfReportGenerator) {
+            ,SecurityService securityService, EmployeeService employeeService,KafkaTemplate kafkaTemplate) {
         this.productRepository = productRepository;
         this.stockRepository = stockRepository;
         this.securityService = securityService;
         this.employeeService = employeeService;
-//        this.kafkaTemplate = kafkaTemplate;
-        this.productConsumer = productConsumer;
-        this.pdfReportGenerator = pdfReportGenerator;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public List<ProductDto> getDtoProductList(long employeeId){
@@ -83,7 +80,7 @@ public class ProductService {
         Product product = new Product();
         product.setName(productDto.name());
         product.setSize(productDto.size());
-//        kafkaTemplate.send(TOPIC_NAME,product.toProductDto());
+        kafkaTemplate.send(TOPIC_NAME,product.toProductDto());
         return productRepository.save(product).toProductDto();
     }
 
