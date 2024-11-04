@@ -1,16 +1,21 @@
 package Warehouse.WarehouseManager.product;
 
-import Warehouse.WarehouseManager.employee.EmployeeDto;
+import Warehouse.WarehouseManager.consumer.ProductConsumer;
 import Warehouse.WarehouseManager.employee.EmployeeService;
 import Warehouse.WarehouseManager.enums.ProductSize;
 import Warehouse.WarehouseManager.enums.Resource;
 import Warehouse.WarehouseManager.enums.Role;
 import Warehouse.WarehouseManager.enums.WarehouseSystemOperation;
-import Warehouse.WarehouseManager.exception.*;
+import Warehouse.WarehouseManager.exception.ProductAlreadyExistsException;
+import Warehouse.WarehouseManager.exception.ProductNotExistsException;
+import Warehouse.WarehouseManager.exception.ProductQuantityException;
+import Warehouse.WarehouseManager.exception.StockNotExistsException;
+import Warehouse.WarehouseManager.reportgenerator.PDFReportGenerator;
 import Warehouse.WarehouseManager.security.SecurityService;
 import Warehouse.WarehouseManager.stock.Stock;
 import Warehouse.WarehouseManager.stock.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +32,19 @@ public class ProductService {
 
     private EmployeeService employeeService;
 
+    private KafkaTemplate<Long,ProductDto> kafkaTemplate;
+
+    private final String TOPIC_NAME = "new-topic";
+
+
     @Autowired
     public ProductService(ProductRepository productRepository, StockRepository stockRepository
-            ,SecurityService securityService, EmployeeService employeeService) {
+            ,SecurityService securityService, EmployeeService employeeService,KafkaTemplate kafkaTemplate) {
         this.productRepository = productRepository;
         this.stockRepository = stockRepository;
         this.securityService = securityService;
         this.employeeService = employeeService;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public List<ProductDto> getDtoProductList(long employeeId){
@@ -69,6 +80,7 @@ public class ProductService {
         Product product = new Product();
         product.setName(productDto.name());
         product.setSize(productDto.size());
+        kafkaTemplate.send(TOPIC_NAME,product.toProductDto());
         return productRepository.save(product).toProductDto();
     }
 
@@ -96,7 +108,6 @@ public class ProductService {
         stockRepository.delete(stock);
         productRepository.delete(product);
     }
-
 
     private boolean checkProductQuantity(String productName){
         return stockRepository.findStockByProductName(productName)

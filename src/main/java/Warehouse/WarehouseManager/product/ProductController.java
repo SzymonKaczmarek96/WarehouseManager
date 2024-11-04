@@ -1,8 +1,8 @@
 package Warehouse.WarehouseManager.product;
 
 import Warehouse.WarehouseManager.enums.ProductSize;
+import Warehouse.WarehouseManager.reportgenerator.PDFReportGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +15,9 @@ public class ProductController {
     private ProductService productService;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService,PDFReportGenerator pdfReportGenerator) {
         this.productService = productService;
     }
-
 
     @GetMapping("/{employeeId}")
     public ResponseEntity<List<ProductDto>> getProductList(@PathVariable long employeeId){
@@ -54,9 +53,5 @@ public class ProductController {
         productService.deleteProduct(productName,employeeId);
         return ResponseEntity.noContent().build();
     }
-
-
-
-
 
 }

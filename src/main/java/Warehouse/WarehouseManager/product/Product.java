@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.EnumSet;
 
 @AllArgsConstructor
@@ -14,7 +15,7 @@ import java.util.EnumSet;
 @Getter
 @Entity
 
-public class Product {
+public class Product implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter

@@ -24,7 +24,7 @@ public class ProductStored {
     @Column(nullable = false)
     private String lotNumber;
 
-    //TODO: migrate deliveryNumber to new class DeliveryNote
+
     @Column(nullable = false)
     private String deliveryNumber;
 
