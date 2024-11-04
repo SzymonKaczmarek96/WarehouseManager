@@ -2,15 +2,19 @@ package Warehouse.WarehouseManager.warehouse;
 
 import Warehouse.WarehouseManager.employee.EmployeeDto;
 import Warehouse.WarehouseManager.employee.EmployeeService;
-import Warehouse.WarehouseManager.enums.ProductSize;
-import Warehouse.WarehouseManager.enums.Resource;
-import Warehouse.WarehouseManager.enums.WarehouseSystemOperation;
+import Warehouse.WarehouseManager.enums.*;
 import Warehouse.WarehouseManager.exception.*;
+import Warehouse.WarehouseManager.product.ProductRepository;
 import Warehouse.WarehouseManager.security.SecurityService;
+import Warehouse.WarehouseManager.stock.Stock;
+import Warehouse.WarehouseManager.stock.StockRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,11 +23,16 @@ public class WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final SecurityService securityService;
     private final EmployeeService employeeService;
+    private ProductRepository productRepository;
+    private StockRepository stockRepository;
 
-    public WarehouseService(final WarehouseRepository warehouseRepository, final SecurityService securityService, final EmployeeService employeeService) {
+    public WarehouseService(final WarehouseRepository warehouseRepository, final SecurityService securityService, final EmployeeService employeeService,
+                            final ProductRepository productRepository, final StockRepository stockRepository) {
         this.warehouseRepository = warehouseRepository;
         this.securityService = securityService;
         this.employeeService = employeeService;
+        this.productRepository = productRepository;
+        this.stockRepository = stockRepository;
     }
 
     private List<Warehouse> getWarehouses() {
@@ -73,7 +82,6 @@ public class WarehouseService {
         if (!employeeDto.role().hasAccessTo(WarehouseSystemOperation.MODIFY, Resource.WAREHOUSE)) {
             throw new AccessDeniedException();
         }
-
         if (warehouseDto.id() == null) throw new EmptyDataException();
         Warehouse currentWarehouse = getWarehouseById(warehouseDto.id());
         if (!warehouseDto.name().isBlank()) {
@@ -108,6 +116,7 @@ public class WarehouseService {
     private EmployeeDto getEmployeeDtoFromAccessToken(String accessToken) {
         return employeeService.getEmployeeDtoById(Long.valueOf(securityService.verifyToken(accessToken).getSubject()));
     }
+
 
 
 }

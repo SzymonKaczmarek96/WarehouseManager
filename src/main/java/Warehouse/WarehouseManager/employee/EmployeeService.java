@@ -1,6 +1,7 @@
 package Warehouse.WarehouseManager.employee;
 
 import Warehouse.WarehouseManager.email.EmailService;
+import Warehouse.WarehouseManager.enums.Role;
 import Warehouse.WarehouseManager.exception.*;
 import Warehouse.WarehouseManager.security.ChangePasswordDto;
 import Warehouse.WarehouseManager.security.LoginResponseDto;
@@ -150,5 +151,10 @@ public class EmployeeService {
             encodedEmployee.setPassword(securityService.encodePassword(changePasswordDto.newPassword()));
             employeeRepository.save(encodedEmployee);
         } else throw new WrongCredentialsException("Incorrect password");
+    }
+
+    public Role getEmployeeRoleByEmployeeId(long employeeId){
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(()-> new EmployeeNotExistsException("Employee"));
+        return employee.getRole();
     }
 }

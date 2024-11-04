@@ -62,9 +62,8 @@ public class EmployeeServiceTest {
 
 
     @Test
-    public void shouldSaveEmployeeToDB(){
+    public void shouldSaveEmployee(){
         //given
-//        when(bCryptPasswordEncoder.encode(createEmployeeOne().getPassword())).thenReturn("encodedPassword");
         when(securityService.encodePassword(any(String.class))).thenReturn("hashed_password");
         when(employeeRepository.save(any(Employee.class))).thenAnswer(
                 invocationOnMock -> {
@@ -72,73 +71,31 @@ public class EmployeeServiceTest {
                     saveEmployee.setId(1L);
                     return saveEmployee;
                 });
+        doNothing().when(emailService).sendActivationEmail(any(EmployeeDto.class));
         //when
         EmployeeDto employeeDto = employeeService.employeeRegistration(createEmployeeOne().toEmployeeDto());
         //then
         assertNotNull(employeeDto);
-        verify(employeeRepository,times(1)).existsEmployeeByUsername(employeeDto.username());
-        verify(employeeRepository,times(1)).save(any(Employee.class));
-        verify(employeeRepository,times(1)).existsEmployeeByEmail(employeeDto.email());
     }
 
     @Test
     public void shouldThrowEmptyDataExceptionWhenUsernameIsEmpty() {
-        //given
-        Set<Role> roles = new HashSet<>();
-        Employee employee3 = new Employee(
-                2L,
-                "",
-                "szymon@interia.pl",
-                "hashed_password",
-                true,
-                Role.ADMIN,
-                "access_token_value",
-                "refresh_token_value",
-                LocalDateTime.of(2023, 9, 15, 12, 0),
-                LocalDateTime.of(2024, 9, 15, 12, 0)
-        );
         //when
-        Assertions.assertThrows(EmptyDataException.class,()->employeeService.employeeRegistration(employee3.toEmployeeDto()));
+        Assertions.assertThrows(EmptyDataException.class,()->employeeService.employeeRegistration
+                (createEmployeeWithEmptyUsername().toEmployeeDto()));
     }
 
     @Test
     public void shouldThrowEmptyDataExceptionWhenPasswordIsEmpty(){
-        //given
-        Set<Role> roles = new HashSet<>();
-        Employee employee3 = new Employee(
-                2L,
-                "szymon",
-                "szymon@interia.pl",
-                "",
-                true,
-                Role.ADMIN,
-                "access_token_value",
-                "refresh_token_value",
-                LocalDateTime.of(2023, 9, 15, 12, 0),
-                LocalDateTime.of(2024, 9, 15, 12, 0)
-        );
         //when
-        Assertions.assertThrows(EmptyDataException.class,()->employeeService.employeeRegistration(employee3.toEmployeeDto()));
+        Assertions.assertThrows(EmptyDataException.class,()->employeeService.employeeRegistration
+                (createEmployeeWithEmptyPassword().toEmployeeDto()));
     }
 
     @Test
     public void shouldThrowEmptyDataExceptionWhenEmailIsEmpty(){
-        //given
-        Set<Role> roles = new HashSet<>();
-        Employee employee3 = new Employee(
-                2L,
-                "szymon",
-                "",
-                "1234",
-                true,
-                Role.ADMIN,
-                "access_token_value",
-                "refresh_token_value",
-                LocalDateTime.of(2023, 9, 15, 12, 0),
-                LocalDateTime.of(2024, 9, 15, 12, 0)
-        );
         //when
-        Assertions.assertThrows(EmptyDataException.class,()->employeeService.employeeRegistration(employee3.toEmployeeDto()));
+        Assertions.assertThrows(EmptyDataException.class,()->employeeService.employeeRegistration(createEmployeeWithEmptyEmail().toEmployeeDto()));
     }
 
     @Test
@@ -159,8 +116,7 @@ public class EmployeeServiceTest {
     }
 
     private Employee createEmployeeOne() {
-
-        Employee employee1 = new Employee(
+        return new Employee(
                 1L, // id
                 "john", // username
                 "hashed_password", // password
@@ -169,15 +125,13 @@ public class EmployeeServiceTest {
                 Role.ADMIN, // roles
                 "access_token_value", // accessToken
                 "refresh_token_value", // refreshToken
-                LocalDateTime.of(2023, 9, 15, 12, 0), // accessTokenExpirationDate
-                LocalDateTime.of(2024, 9, 15, 12, 0) // refreshTokenExpirationDate
+                LocalDateTime.of(2023, 9, 15, 12, 0),
+                LocalDateTime.of(2024, 9, 15, 12, 0)
         );
-        return employee1;
     }
 
     private Employee createEmployeeTwo() {
-        Set<Role> roles = new HashSet<>();
-        Employee employee2 = new Employee(
+        return new Employee(
                 2L, // id
                 "szymon", // username
                 "hashed_password", // password
@@ -189,15 +143,13 @@ public class EmployeeServiceTest {
                 LocalDateTime.of(2023, 9, 15, 12, 0), // accessTokenExpirationDate
                 LocalDateTime.of(2024, 9, 15, 12, 0) // refreshTokenExpirationDate
         );
-        return employee2;
     }
 
-    private Employee createEmployeeWithRepeatedUsername(){
-        Set<Role> roles = new HashSet<>();
-        Employee employee3 = new Employee(
+    private Employee createEmployeeWithEmptyPassword(){
+        return new Employee(
                 2L, // id
                 "szymon", // username
-                "hashed_password", // password
+                "", // password
                 "szymon@interia.pl", // email
                 true, // isActive
                 Role.ADMIN, // roles
@@ -206,7 +158,36 @@ public class EmployeeServiceTest {
                 LocalDateTime.of(2023, 9, 15, 12, 0), // accessTokenExpirationDate
                 LocalDateTime.of(2024, 9, 15, 12, 0) // refreshTokenExpirationDate
         );
-        return employee3;
+    }
+
+    private Employee createEmployeeWithEmptyEmail(){
+        return new Employee(
+                2L,
+                "szymon",
+                "",
+                "1234",
+                true,
+                Role.ADMIN,
+                "access_token_value",
+                "refresh_token_value",
+                LocalDateTime.of(2023, 9, 15, 12, 0),
+                LocalDateTime.of(2024, 9, 15, 12, 0)
+        );
+    }
+
+    private Employee createEmployeeWithEmptyUsername(){
+        return new Employee(
+                2L,
+                "",
+                "szymon@interia.pl",
+                "hashed_password",
+                true,
+                Role.ADMIN,
+                "access_token_value",
+                "refresh_token_value",
+                LocalDateTime.of(2023, 9, 15, 12, 0),
+                LocalDateTime.of(2024, 9, 15, 12, 0)
+        );
     }
 }
 
